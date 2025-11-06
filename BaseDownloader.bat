@@ -23,7 +23,7 @@ set "progs[13]=https://code.visualstudio.com/sha/download?build=stable&os=win32-
 
 :menu
 cls
-echo Version 1.0
+echo Version 1.1
 echo ================================
 echo Preferred
 echo 1 - VC redist 2015-2022
