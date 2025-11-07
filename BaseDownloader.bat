@@ -117,8 +117,12 @@ if !errorlevel! == 0 (
 :EnableMode
 echo ВКЛЮЧЕНИЕ показа всех иконок трея с автозапуском...
 
-:: Создаем VBS скрипт для показа иконок
-set "VBSFile=%TEMP%\ShowAllTrayIcons.vbs"
+:: Создаем постоянную папку для скриптов
+set "ScriptFolder=%APPDATA%\TrayIconsScript"
+if not exist "%ScriptFolder%" mkdir "%ScriptFolder%"
+
+:: Создаем VBS скрипт для показа иконок в постоянной папке
+set "VBSFile=%ScriptFolder%\ShowAllTrayIcons.vbs"
 (
 echo HKCU = ^&H80000001
 echo key = "Control Panel\NotifyIconSettings"
@@ -133,7 +137,7 @@ echo End If
 ) > "%VBSFile%"
 
 :: Создаем XML для задачи планировщика
-set "XMLFile=%TEMP%\ShowAllTrayIcons.xml"
+set "XMLFile=%ScriptFolder%\ShowAllTrayIcons.xml"
 (
 echo ^<?xml version="1.0" encoding="UTF-16"?^>
 echo ^<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task"^>
@@ -195,7 +199,8 @@ echo ОТКЛЮЧЕНИЕ показа всех иконок трея...
 schtasks /delete /tn "ShowAllTrayIcons" /f >nul
 
 :: Создаем VBS скрипт для скрытия иконок (возврат к авторежиму)
-set "VBSFile=%TEMP%\HideTrayIcons.vbs"
+set "ScriptFolder=%APPDATA%\TrayIconsScript"
+set "VBSFile=%ScriptFolder%\HideTrayIcons.vbs"
 (
 echo HKCU = ^&H80000001
 echo key = "Control Panel\NotifyIconSettings"
@@ -212,6 +217,9 @@ echo End If
 :: Применяем настройки скрытия
 cscript //nologo "%VBSFile%"
 
+:: Удаляем папку со скриптами
+if exist "%ScriptFolder%" rmdir /s /q "%ScriptFolder%"
+
 echo Все иконки трея ОТКЛЮЧЕНЫ (авторежим)
 echo Автозапуск УДАЛЕН
 
@@ -221,11 +229,6 @@ taskkill /f /im explorer.exe >nul 2>&1
 timeout /t 1 /nobreak >nul
 start explorer.exe
 
-:: Очистка временных файлов
-if exist "%TEMP%\ShowAllTrayIcons.vbs" del "%TEMP%\ShowAllTrayIcons.vbs" >nul 2>&1
-if exist "%TEMP%\HideTrayIcons.vbs" del "%TEMP%\HideTrayIcons.vbs" >nul 2>&1
-if exist "%TEMP%\ShowAllTrayIcons.xml" del "%TEMP%\ShowAllTrayIcons.xml" >nul 2>&1
-
 echo Готово! Текущий статус: 
 schtasks /query /tn "ShowAllTrayIcons" >nul 2>&1
 if !errorlevel! == 0 (
@@ -234,7 +237,6 @@ if !errorlevel! == 0 (
     echo [ОТКЛЮЧЕНО] - Иконки в авторежиме, автозапуск не активен
 )
 
-echo.
 echo Возврат в главное меню через 10 секунд, можете нажать любую кнопку...
 timeout /t 10 >nul
 exit /b
